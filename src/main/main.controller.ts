@@ -30,7 +30,7 @@ export class MainController {
 
   @Post('extend-subscription')
   async extendSubscription(
-    @Query('days') days: number,  
+    @Query('days') days: number,
     @Query('userId') userId: number,
   ) {
     const { extendedSubscription, config } =
@@ -39,7 +39,7 @@ export class MainController {
       clientAddress,
       user: { id, telegramId },
     } = config;
-    await this.unblockAccess(config.clientAddress);
+    await this.wgService.unblockAccess(config.clientAddress);
 
     await this.service.createLog({
       userId: id,
@@ -57,50 +57,6 @@ export class MainController {
     return {
       endDate: extendedSubscription.endDate,
     };
-  }
-
-  @Post('add')
-  async addPeer() {}
-
-  @Post('generate-keys')
-  async generateKeys() {
-    return await this.wgService.generateKeyPair();
-  }
-
-  // Блокировка доступа
-  @Get('block')
-  async blockAccess(@Query('ip') ip: string): Promise<{ message: string }> {
-    if (!ip) {
-      throw new HttpException('IP-адрес не указан', HttpStatus.BAD_REQUEST);
-    }
-    try {
-      await this.wgService.blockAccess(ip);
-      return { message: `Доступ для IP ${ip} успешно отключён.` };
-    } catch (error) {
-      console.log(error);
-      throw new HttpException(
-        `Ошибка при отключении доступа для IP ${ip}: ${error.message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-  }
-
-  // Разблокировка доступа
-  @Get('unblock')
-  async unblockAccess(@Query('ip') ip: string): Promise<{ message: string }> {
-    if (!ip) {
-      throw new HttpException('IP-адрес не указан', HttpStatus.BAD_REQUEST);
-    }
-    try {
-      await this.wgService.unblockAccess(ip);
-      return { message: `Доступ для IP ${ip} успешно включён.` };
-    } catch (error) {
-      console.log(error);
-      throw new HttpException(
-        `Ошибка при включении доступа для IP ${ip}: ${error.message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
   }
 
   @Post('block-expired-configs')
