@@ -1,0 +1,42 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Test SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "echo 'SSH connected successfully!'"
+
+      - name: Deploy to server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 22
+          debug: true
+          script: |
+            # Если папка репозитория ещё не существует, клонируем его
+            if [ ! -d "/root/api/.git" ]; then
+              git clone https://github.com/karmaKiller3352/vpn-service.git /root/api
+            fi
+
+            # Переходим в папку репозитория и обновляем код
+            cd /root/api
+            git pull origin main
+
+            # Переходим в папку с docker-compose.yml
+            cd /root/vpn-service
+            # Перезапускаем контейнеры
+            docker-compose down
+            docker-compose up --build -d
