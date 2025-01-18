@@ -66,6 +66,7 @@ export class MainService {
 
   async blockExpiredConfigs() {
     const configs = await this.dbService.getExpiredConfigs();
+    console.log(configs)
     const blockedUsers = [];
 
     for (const config of configs) {

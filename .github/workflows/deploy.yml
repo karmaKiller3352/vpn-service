@@ -30,6 +30,6 @@ jobs:
             git reset --hard origin/main
 
             # Переходим в папку с docker-compose.yml
-            cd /root/vpn-service
+            cd /root
             # Перезапускаем контейнеры
             docker-compose up --build -d backend
