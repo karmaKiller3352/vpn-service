@@ -23,14 +23,6 @@ export class WireGuardService {
 
   private serverPublicKey: string = '';
 
-  // Конфигурация SSH
-  private readonly sshConfig = {
-    host: process.env.SSH_HOST,
-    port: 22,
-    username: process.env.SSH_USER,
-    privateKey: require('fs').readFileSync(process.env.SSH_KEY_PATH),
-  };
-
   // Имя контейнера с WireGuard
   private readonly wireguardContainer = 'wireguard';
   private readonly interface = process.env.WIREGUARD_INTERFACE || 'wg0';
@@ -46,6 +38,14 @@ export class WireGuardService {
 
   // Выполнение команды внутри Docker-контейнера через SSH
   private executeSshCommand(command: string): Promise<string> {
+    // Конфигурация SSH
+    const sshConfig = {
+      host: process.env.SSH_HOST,
+      port: 22,
+      username: process.env.SSH_USER,
+      privateKey: require('fs').readFileSync(process.env.SSH_KEY_PATH),
+    };
+    
     return new Promise((resolve, reject) => {
       const dockerCommand = `docker exec ${this.wireguardContainer} ${command}`;
       console.log(dockerCommand);
@@ -74,7 +74,7 @@ export class WireGuardService {
           });
         })
         .on('error', (err) => reject(err.message))
-        .connect(this.sshConfig);
+        .connect(sshConfig);
     });
   }
 
