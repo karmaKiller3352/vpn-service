@@ -7,6 +7,7 @@ import {
   HttpStatus,
   HttpException,
   Body,
+  Delete,
 } from '@nestjs/common';
 import { MainService } from './main.service';
 import { WireGuardService } from 'src/wireguard/wireguard.service';
@@ -28,19 +29,59 @@ export class MainController {
     return await this.service.addTGUser(user);
   }
 
-  @Post('update-subscription')
-  async extendSubscription(
-    @Query('days') days: number,
+  @Post('unblock-user')
+  async unblockUser(
+    @Query('days') additionalDays: number,
     @Query('userId') userId: number,
-    @Query('disableImmediately') disableImmediately: boolean,
   ) {
-    const { extendedSubscription, config } =
-      await this.service.updateSubscription(userId, days, disableImmediately);
     const {
-      clientAddress,
-      user: { id, telegramId },
-    } = config;
-    await this.wgService.unblockAccess(config.clientAddress);
+      extendedSubscription,
+      config: {
+        id,
+        user: { telegramId },
+        clientAddress,
+      },
+    } = await this.service.updateSubscription({
+      userId,
+      additionalDays
+    });
+
+    await this.wgService.unblockAccess(clientAddress)
+
+    await this.service.createLog({
+      userId: id,
+      eventType: 'UNBLOCK IP',
+      targetId: null,
+      targetType: 'configs',
+      details: {
+        additionalDays,
+        userTgId: telegramId,
+        clientAddress: clientAddress,
+        prolongationDate: new Date(),
+        reason: 'subscription prolonged',
+      },
+    });
+
+    return {
+      endDate: extendedSubscription.endDate,
+    };
+  }
+
+  @Delete('block-user')
+  async blockUser(@Query('userId') userId: number) {
+    const {
+      extendedSubscription,
+      config: {
+        id,
+        user: { telegramId },
+        clientAddress,
+      },
+    } = await this.service.updateSubscription({
+      userId,
+      disableImmediately: true,
+    });
+
+    await this.wgService.blockAccess(clientAddress);
 
     await this.service.createLog({
       userId: id,

@@ -56,12 +56,18 @@ export class MainService {
   }
 
   async updateSubscription(
-    userId: number,
-    days: number,
-    disableImmediately?: boolean,
+    {
+      userId,
+      disableImmediately,
+      additionalDays,
+    }: {
+      userId: number;
+      disableImmediately?: boolean; // Отключить сразу
+      additionalDays?: number;
+    }, // Количество дополнительных дней}
   ) {
     const extendedSubscription = await this.dbService.updateSubscriptionEndDate(
-      { userId, disableImmediately, additionalDays: days },
+      { userId, disableImmediately, additionalDays },
     );
     const config = await this.dbService.getConfigByUserId(userId);
     return { extendedSubscription, config };
@@ -69,7 +75,6 @@ export class MainService {
 
   async blockExpiredConfigs() {
     const configs = await this.dbService.getExpiredConfigs();
-    console.log(configs);
     const blockedUsers = [];
 
     for (const config of configs) {
