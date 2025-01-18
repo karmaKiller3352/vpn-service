@@ -1,6 +1,9 @@
 # Указываем базовый образ
 FROM node:18-alpine
 
+# Установка Docker CLI
+RUN apk add --no-cache docker-cli
+
 # Устанавливаем рабочую директорию
 WORKDIR /app
 
