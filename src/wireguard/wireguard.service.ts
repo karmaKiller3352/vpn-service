@@ -277,10 +277,6 @@ export class WireGuardService {
       `iptables -A FORWARD -o ${this.interface} -d ${ipAddress} -j DROP`,
     );
 
-    // 3. Сохранение iptables
-    await this.executeCommand('netfilter-persistent save');
-    await this.executeCommand('netfilter-persistent reload');
-
     try {
       // 2. Удаление маршрута
       await this.executeCommand(
@@ -301,10 +297,6 @@ export class WireGuardService {
     await this.executeCommand(
       `iptables -D FORWARD -o ${this.interface} -d ${ipAddress} -j DROP || true`,
     );
-
-    // Сохранение iptables
-    await this.executeCommand('netfilter-persistent save');
-    await this.executeCommand('netfilter-persistent reload');
 
     try {
       // Добавление маршрута
