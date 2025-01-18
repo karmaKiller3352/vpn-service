@@ -27,12 +27,14 @@
     "@nestjs/schedule": "^4.1.2",
     "@nestjs/typeorm": "^10.0.2",
     "dotenv": "^16.4.7",
+    "nest-winston": "^1.10.1",
     "pg": "^8.13.1",
     "qrcode": "^1.5.4",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
     "ssh2": "^1.16.0",
-    "typeorm": "^0.3.20"
+    "typeorm": "^0.3.20",
+    "winston": "^3.17.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",

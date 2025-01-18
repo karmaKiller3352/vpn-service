@@ -29,6 +29,7 @@ export class DatabaseService {
 
     // Если пользователя нет, создаём его
     user = this.userRepository.create({ telegramId });
+    
     await this.createLog({
       userId: user.id,
       eventType: 'USER_CREATION',

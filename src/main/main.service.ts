@@ -12,6 +12,7 @@ export class MainService {
 
   async addTGUser(user: AddTgUser): Promise<PeerInfo> {
     const { telegramId } = user;
+
     const { id } = await this.dbService.addUser(telegramId);
 
     const configExists = await this.dbService.checkIfConfigForUserExists(id);
