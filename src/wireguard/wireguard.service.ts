@@ -7,7 +7,18 @@ import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class WireGuardService {
-  constructor(private readonly configService: ConfigService) {}
+  private readonly configPath =
+    process.env.WIREGUARD_CONFIG_PATH || '/etc/wireguard/config/';
+
+  constructor(private readonly configService: ConfigService) {
+    console.log(
+      'WireGuardService initialized with configPath:',
+      this.configPath,
+    );
+    if (!this.configPath) {
+      throw new Error('WIREGUARD_CONFIG_PATH is undefined or empty.');
+    }
+  }
   private readonly environment = process.env.ENVIRONMENT || 'production';
 
   private serverPublicKey: string = '';
@@ -23,7 +34,6 @@ export class WireGuardService {
   // Имя контейнера с WireGuard
   private readonly wireguardContainer = 'wireguard';
   private readonly interface = process.env.WIREGUARD_INTERFACE || 'wg0';
-  private readonly configPath = '/etc/wireguard/config'; // Путь в контейнере
 
   // Универсальное выполнение команды
   private async executeCommand(command: string): Promise<string> {
@@ -137,7 +147,8 @@ export class WireGuardService {
 
   async createConfigFile(config: string, userId: number) {
     const clientConfigFileName = `peer-${userId}.conf`;
-    const clientConfigPath = path.join(this.configPath, clientConfigFileName);
+    console.log(this.configPath, clientConfigFileName);
+    const clientConfigPath = this.configPath + clientConfigFileName;
 
     // Сохраняем конфигурацию клиента в файл
     await this.executeCommand(

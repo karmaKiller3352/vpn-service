@@ -38,5 +38,4 @@ jobs:
             # Переходим в папку с docker-compose.yml
             cd /root/vpn-service
             # Перезапускаем контейнеры
-            docker-compose down
             docker-compose up --build -d backend
