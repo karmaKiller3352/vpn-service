@@ -155,7 +155,7 @@ export class DatabaseService {
 
     // Проверяем, существует ли подписка для пользователя
     const subscription = await this.subscriptionRepository.findOne({
-      where: { user: { id: userId }, isActive: true },
+      where: { user: { id: userId } },
       relations: ['user'],
     });
 
