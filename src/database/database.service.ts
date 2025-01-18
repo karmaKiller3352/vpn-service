@@ -28,8 +28,10 @@ export class DatabaseService {
     }
 
     // Если пользователя нет, создаём его
-    user = this.userRepository.create({ telegramId });
-    
+    user = await this.userRepository.save(
+      this.userRepository.create({ telegramId }),
+    );
+
     await this.createLog({
       userId: user.id,
       eventType: 'USER_CREATION',
@@ -41,7 +43,7 @@ export class DatabaseService {
         source: user.source,
       },
     });
-    return this.userRepository.save(user); // Сохраняем пользователя и возвращаем его
+    return user; // Сохраняем пользователя и возвращаем его
   }
 
   // Пример метода для получения всех пользователей
