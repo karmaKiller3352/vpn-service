@@ -23,7 +23,7 @@ export class WireGuardService {
   // Имя контейнера с WireGuard
   private readonly wireguardContainer = 'wireguard';
   private readonly interface = process.env.WIREGUARD_INTERFACE || 'wg0';
-  private readonly configPath = '/config/'; // Путь в контейнере
+  private readonly configPath = '/etc/wireguard/config'; // Путь в контейнере
 
   // Универсальное выполнение команды
   private async executeCommand(command: string): Promise<string> {
