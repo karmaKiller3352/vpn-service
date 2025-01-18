@@ -8,7 +8,7 @@ import { ConfigService } from '@nestjs/config';
 @Injectable()
 export class WireGuardService {
   private readonly configPath =
-    process.env.WIREGUARD_CONFIG_PATH || '/etc/wireguard/config/';
+    process.env.WIREGUARD_CONFIG_PATH || '/etc/wireguard/client-configs/';
 
   constructor(private readonly configService: ConfigService) {
     console.log(
@@ -45,7 +45,7 @@ export class WireGuardService {
       username: process.env.SSH_USER,
       privateKey: require('fs').readFileSync(process.env.SSH_KEY_PATH),
     };
-    
+
     return new Promise((resolve, reject) => {
       const dockerCommand = `docker exec ${this.wireguardContainer} ${command}`;
       console.log(dockerCommand);
@@ -175,6 +175,8 @@ export class WireGuardService {
   PublicKey = ${publicKey}
   AllowedIPs = ${clientAddress}
   `;
+
+    console.log(this.interface);
     await this.executeCommand(
       `bash -c "echo '${peerConfig}' >> /etc/wireguard/${this.interface}.conf"`,
     );
