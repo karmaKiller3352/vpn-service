@@ -28,13 +28,14 @@ export class MainController {
     return await this.service.addTGUser(user);
   }
 
-  @Post('extend-subscription')
+  @Post('update-subscription')
   async extendSubscription(
     @Query('days') days: number,
     @Query('userId') userId: number,
+    @Query('disableImmediately') disableImmediately: boolean,
   ) {
     const { extendedSubscription, config } =
-      await this.service.extendSubscription(userId, days);
+      await this.service.updateSubscription(userId, days, disableImmediately);
     const {
       clientAddress,
       user: { id, telegramId },

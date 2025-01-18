@@ -143,9 +143,16 @@ export class DatabaseService {
     return this.subscriptionRepository.save(subscription);
   }
 
-  async extendSubscription(
-    userId: number,
-    additionalDays: number,
+  async updateSubscriptionEndDate(
+    {
+      userId,
+      disableImmediately,
+      additionalDays,
+    }: {
+      userId: number;
+      disableImmediately?: boolean; // Отключить сразу
+      additionalDays?: number;
+    }, // Количество дополнительных дней}
   ): Promise<Subscription> {
     // Проверяем, существует ли пользователь
     const user = await this.userRepository.findOneBy({ id: userId });
@@ -164,24 +171,36 @@ export class DatabaseService {
         `No active subscription found for user ID ${userId}.`,
       );
     }
-    const oldEndDate = subscription.endDate;
-    // Продлеваем подписку
-    subscription.endDate = new Date(
-      subscription.endDate.getTime() + additionalDays * 24 * 60 * 60 * 1000,
-    );
 
+    const oldEndDate = subscription.endDate;
+
+    // Если параметр disableImmediately передан, устанавливаем endDate на текущую дату
+    if (disableImmediately) {
+      subscription.endDate = new Date();
+    }
+
+    // Если передано количество дополнительных дней, добавляем их к текущему endDate
+    if (additionalDays) {
+      subscription.endDate = new Date(
+        subscription.endDate.getTime() + additionalDays * 24 * 60 * 60 * 1000,
+      );
+    }
+
+    // Логируем изменения
     await this.createLog({
       userId,
-      eventType: 'SUBSCRIPTION_EXTENDED',
+      eventType: 'SUBSCRIPTION_UPDATED',
       targetId: subscription.id,
       targetType: 'subscriptions',
       details: {
-        additionalDays,
         oldEndDate,
         newEndDate: subscription.endDate,
+        additionalDays,
+        disableImmediately,
       },
     });
 
+    // Сохраняем обновленную подписку
     return this.subscriptionRepository.save(subscription);
   }
 
