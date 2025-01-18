@@ -17,7 +17,7 @@ import { DatabaseService } from './database.service';
         password: process.env.DB_PASSWORD || 'vpn_password',
         database: process.env.DB_NAME || 'vpn_database',
         autoLoadEntities: true, // Автоматическая загрузка сущностей
-        synchronize: process.env.NODE_ENV !== 'production', // Только для разработки,
+        synchronize: true,//process.env.NODE_ENV !== 'production', // Только для разработки,
         logging: true, // Включение логирования запросов
         // logger: 'advanced-console', // Логирование в консоль
       }),
