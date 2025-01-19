@@ -18,7 +18,7 @@ import { DatabaseService } from './database.service';
         database: process.env.DB_NAME || 'vpn_database',
         autoLoadEntities: true, // Автоматическая загрузка сущностей
         synchronize: process.env.NODE_ENV !== 'production', // Только для разработки,
-        logging: true, // Включение логирования запросов
+        // logging: true, // Включение логирования запросов
         // logger: 'advanced-console', // Логирование в консоль
       }),
     }),
