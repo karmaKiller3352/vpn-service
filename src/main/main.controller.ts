@@ -3,7 +3,7 @@ import { Get, Post, Query, Controller, Body, Delete } from '@nestjs/common';
 import { MainService } from './main.service';
 import { WireGuardService } from 'src/wireguard/wireguard.service';
 
-@Controller('api')
+@Controller()
 export class MainController {
   constructor(
     private readonly service: MainService,
@@ -20,7 +20,7 @@ export class MainController {
     return await this.service.addTGUser(user);
   }
 
-  @Post('/tg-webhook')
+  @Post('tg-webhook')
   async tgWebHook(@Body() body) {
     console.log(body)
   }
