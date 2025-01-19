@@ -7,7 +7,6 @@ import { logger } from './winston.logger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { logger });
-  app.setGlobalPrefix('api');
   await app.listen(process.env.PORT ?? 443);
 }
 bootstrap();

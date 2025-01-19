@@ -3,7 +3,7 @@ import { Get, Post, Query, Controller, Body, Delete } from '@nestjs/common';
 import { MainService } from './main.service';
 import { WireGuardService } from 'src/wireguard/wireguard.service';
 
-@Controller()
+@Controller('api')
 export class MainController {
   constructor(
     private readonly service: MainService,
