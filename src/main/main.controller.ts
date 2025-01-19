@@ -1,5 +1,13 @@
 import { AddTgUser } from './main.types';
-import { Get, Post, Query, Controller, Body, Delete } from '@nestjs/common';
+import {
+  Get,
+  Post,
+  Query,
+  Controller,
+  Body,
+  Delete,
+  HttpCode,
+} from '@nestjs/common';
 import { MainService } from './main.service';
 import { WireGuardService } from 'src/wireguard/wireguard.service';
 
@@ -21,8 +29,11 @@ export class MainController {
   }
 
   @Post('tg-webhook')
+  @HttpCode(200)
   async tgWebHook(@Body() body) {
-    console.log(body)
+    console.log(body);
+
+    return { ...body };
   }
 
   @Post('request-tg-user-config')
