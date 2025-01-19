@@ -10,6 +10,9 @@ import {
 } from '@nestjs/common';
 import { MainService } from './main.service';
 import { WireGuardService } from 'src/wireguard/wireguard.service';
+import { Telegraf } from 'telegraf';
+
+const bot = new Telegraf('7909061014:AAEnsyLCcGSSsMmccrqh86GkNSD-AggZdqM');
 
 @Controller()
 export class MainController {
@@ -31,9 +34,17 @@ export class MainController {
   @Post('tg-webhook')
   @HttpCode(200)
   async tgWebHook(@Body() body) {
-    console.log(body);
+    try {
+      console.log('Получен вебхук от Telegram:', body);
 
-    return { ...body };
+      // Обработка обновления через Telegraf
+      await bot.handleUpdate(body);
+
+      return { ...body };
+    } catch (error) {
+      console.error('Ошибка при обработке вебхука:', error);
+      return { success: false };
+    }
   }
 
   @Post('request-tg-user-config')
