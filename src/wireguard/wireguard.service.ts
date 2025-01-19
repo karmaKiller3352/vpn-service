@@ -155,7 +155,7 @@ export class WireGuardService {
       `bash -c "echo '${config}' > ${clientConfigPath}"`,
     );
 
-    return clientConfigPath;
+    return config;
   }
 
   async generateQRCode(config: string) {
