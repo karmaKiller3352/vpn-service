@@ -43,7 +43,7 @@ export class MainService {
 
     const { endDate, startDate } = await this.dbService.createSubscription(
       id,
-      2,
+      1,
     );
 
     return {
