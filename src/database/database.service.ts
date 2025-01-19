@@ -62,6 +62,13 @@ export class DatabaseService {
     return false;
   }
 
+  async getSubscriptionByUserId(userId: number): Promise<Subscription | null> {
+    return this.subscriptionRepository.findOne({
+      where: { user: { id: userId } },
+      relations: ['user'], // Загружаем связь с user
+    });
+  }
+
   async getConfigByUserId(userId: number): Promise<Config | null> {
     return this.configRepository.findOne({
       where: { user: { id: userId } },

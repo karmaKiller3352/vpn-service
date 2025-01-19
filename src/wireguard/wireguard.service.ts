@@ -1,9 +1,9 @@
-import * as path from 'path';
 import { Client } from 'ssh2';
 import * as QRCode from 'qrcode';
 import { exec } from 'child_process';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { promises as fs } from 'fs';
 
 @Injectable()
 export class WireGuardService {
@@ -147,7 +147,7 @@ export class WireGuardService {
 
   async createConfigFile(config: string, userId: number) {
     const clientConfigFileName = `peer-${userId}.conf`;
-    console.log(this.configPath, clientConfigFileName);
+
     const clientConfigPath = this.configPath + clientConfigFileName;
 
     // Сохраняем конфигурацию клиента в файл
@@ -176,7 +176,6 @@ export class WireGuardService {
   AllowedIPs = ${clientAddress}
   `;
 
-    console.log(this.interface);
     await this.executeCommand(
       `bash -c "echo '${peerConfig}' >> /etc/wireguard/${this.interface}.conf"`,
     );
@@ -202,6 +201,15 @@ export class WireGuardService {
     } catch (error) {
       console.log(error);
     }
+  }
+
+  async getUserConfig(userId: number) {
+    const clientConfigFileName = `peer-${userId}.conf`;
+
+    const clientConfigPath = this.configPath + clientConfigFileName;
+
+    const fileContent = await fs.readFile(clientConfigPath, 'utf8'); // Читаем файл как строку
+    return fileContent;
   }
 
   async addPeer(userId: number) {

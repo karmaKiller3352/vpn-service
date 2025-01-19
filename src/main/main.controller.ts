@@ -29,6 +29,11 @@ export class MainController {
     return await this.service.addTGUser(user);
   }
 
+  @Post('request-tg-user-config')
+  async requestTgUserConfig(@Body() user: AddTgUser) {
+    return await this.service.requestTgUserConfig(user);
+  }
+
   @Post('unblock-user')
   async unblockUser(
     @Query('days') additionalDays: number,
@@ -43,10 +48,10 @@ export class MainController {
       },
     } = await this.service.updateSubscription({
       userId,
-      additionalDays
+      additionalDays,
     });
 
-    await this.wgService.unblockAccess(clientAddress)
+    await this.wgService.unblockAccess(clientAddress);
 
     await this.service.createLog({
       userId: id,

@@ -10,6 +10,26 @@ export class MainService {
     private dbService: DatabaseService,
   ) {}
 
+  async requestTgUserConfig(user: AddTgUser): Promise<PeerInfo> {
+    const { telegramId } = user;
+
+    const { id } = await this.dbService.addUser(telegramId);
+
+    const config = await this.wgService.getUserConfig(id);
+
+    const { startDate, endDate } =
+      await this.dbService.getSubscriptionByUserId(id);
+
+    const qrCode = await this.wgService.generateQRCode(config);
+
+    return {
+      qrCode,
+      configFilePath: config,
+      startDate: startDate.toString(),
+      expirationDate: endDate.toString(),
+    };
+  }
+
   async addTGUser(user: AddTgUser): Promise<PeerInfo> {
     const { telegramId } = user;
 
