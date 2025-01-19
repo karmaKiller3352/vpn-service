@@ -102,7 +102,7 @@ export class MainService {
       } catch (error) {
         await this.dbService.createLog({
           userId: id,
-          eventType: 'BLOCK IP_ERROR',
+          eventType: 'BLOCK IP - SCHEDULER ERROR',
           targetId: null,
           targetType: 'configs',
           details: {

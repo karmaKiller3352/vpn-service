@@ -12,7 +12,7 @@ export class TasksService {
     await this.handleExpiredSubscriptions();
   }
 
-  @Cron(CronExpression.EVERY_HOUR) // Выполняется каждый час
+  // @Cron(CronExpression.EVERY_HOUR) // Выполняется каждый час
   async handleExpiredSubscriptions(): Promise<void> { 
     console.log(`[Scheduler] Task started at ${new Date().toISOString()}`);
     await this.mainService.blockExpiredConfigs();
