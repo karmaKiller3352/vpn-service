@@ -81,6 +81,7 @@ export class TelegramService {
 
   private async initializeBot() {
     this.bot.start((ctx) => {
+      console.log("старт", ctx)
       const response =
         `*Добро пожаловать в VPN-сервис!*\n\n` +
         `Всё просто — следуйте этим шагам, чтобы подключиться:\n` +
