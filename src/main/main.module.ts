@@ -1,14 +1,14 @@
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from 'src/database/database.module';
 import { WireguardModule } from 'src/wireguard/wireguard.module';
-import { MainController } from './main.controller';
 
 import { MainService } from './main.service';
+import { MainController } from './main.controller';
 
 @Module({
-  imports: [DatabaseModule, WireguardModule],
+  exports: [MainService],
   providers: [MainService],
   controllers: [MainController],
-  exports: [MainService]
+  imports: [DatabaseModule, WireguardModule],
 })
 export class MainModule {}

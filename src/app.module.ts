@@ -8,6 +8,7 @@ import { DatabaseModule } from './database/database.module';
 import { MainModule } from './main/main.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TasksModule } from './tasks/tasks.module';
+import { TelegramModule } from './telegram/telegram.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { TasksModule } from './tasks/tasks.module';
     }),
     MainModule,
     TasksModule,
+    TelegramModule,
   ],
   controllers: [AppController],
   providers: [AppService],

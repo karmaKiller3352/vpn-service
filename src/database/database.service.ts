@@ -104,6 +104,12 @@ export class DatabaseService {
     return this.configRepository.save(config);
   }
 
+  async getUserByTGId(telegramId: number) {
+    return await this.userRepository.findOne({
+      where: { telegramId },
+    });
+  }
+
   async checkIfSubscriptionForUserExists(userId: number) {
     const existingSubscription = await this.subscriptionRepository.findOne({
       where: { user: { id: userId } },

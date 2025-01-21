@@ -15,6 +15,8 @@ export class WireGuardService {
       'WireGuardService initialized with configPath:',
       this.configPath,
     );
+
+    console.log(`${this.environment} mode`);
     if (!this.configPath) {
       throw new Error('WIREGUARD_CONFIG_PATH is undefined or empty.');
     }
@@ -45,10 +47,10 @@ export class WireGuardService {
       username: process.env.SSH_USER,
       privateKey: require('fs').readFileSync(process.env.SSH_KEY_PATH),
     };
+    const dockerCommand = `docker exec ${this.wireguardContainer} ${command}`;
+    console.log(dockerCommand);
 
     return new Promise((resolve, reject) => {
-      const dockerCommand = `docker exec ${this.wireguardContainer} ${command}`;
-      console.log(dockerCommand);
       const conn = new Client();
 
       conn
@@ -208,7 +210,8 @@ export class WireGuardService {
 
     const clientConfigPath = this.configPath + clientConfigFileName;
 
-    const fileContent = await fs.readFile(clientConfigPath, 'utf8'); // Читаем файл как строку
+    const fileContent = await this.executeCommand(`cat ${clientConfigPath}`);
+
     return fileContent;
   }
 
@@ -298,15 +301,14 @@ export class WireGuardService {
   }
 
   async unblockAccess(ipAddress: string): Promise<void> {
-    // Удаление правил iptables
-    await this.executeCommand(
-      `iptables -D FORWARD -i ${this.interface} -s ${ipAddress} -j DROP || true`,
-    );
-    await this.executeCommand(
-      `iptables -D FORWARD -o ${this.interface} -d ${ipAddress} -j DROP || true`,
-    );
-
     try {
+      // Удаление правил iptables
+      await this.executeCommand(
+        `iptables -D FORWARD -i ${this.interface} -s ${ipAddress} -j DROP || true`,
+      );
+      await this.executeCommand(
+        `iptables -D FORWARD -o ${this.interface} -d ${ipAddress} -j DROP || true`,
+      );
       // Добавление маршрута
       await this.executeCommand(
         `ip route add ${ipAddress} dev ${this.interface}`,

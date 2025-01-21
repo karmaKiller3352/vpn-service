@@ -12,9 +12,7 @@ export class MainService {
 
   async requestTgUserConfig(user: AddTgUser): Promise<PeerInfo> {
     const { telegramId } = user;
-
     const { id } = await this.dbService.addUser(telegramId);
-
     const config = await this.wgService.getUserConfig(id);
 
     const { startDate, endDate } =
@@ -133,6 +131,10 @@ export class MainService {
     }
 
     return blockedUsers;
+  }
+
+  async getUserByTGId(telegramId: number) {
+    return await this.dbService.getUserByTGId(telegramId);
   }
 
   async createLog(props: {
