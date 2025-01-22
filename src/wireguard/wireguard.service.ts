@@ -11,11 +11,6 @@ export class WireGuardService {
     process.env.WIREGUARD_CONFIG_PATH || '/etc/wireguard/client-configs/';
 
   constructor(private readonly configService: ConfigService) {
-    console.log(
-      'WireGuardService initialized with configPath:',
-      this.configPath,
-    );
-
     console.log(`${this.environment} mode`);
     if (!this.configPath) {
       throw new Error('WIREGUARD_CONFIG_PATH is undefined or empty.');
@@ -48,7 +43,6 @@ export class WireGuardService {
       privateKey: require('fs').readFileSync(process.env.SSH_KEY_PATH),
     };
     const dockerCommand = `docker exec ${this.wireguardContainer} ${command}`;
-    console.log(dockerCommand);
 
     return new Promise((resolve, reject) => {
       const conn = new Client();
