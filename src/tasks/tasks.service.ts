@@ -6,7 +6,7 @@ import { MainService } from 'src/main/main.service';
 export class TasksService {
   constructor(private readonly mainService: MainService) {}
 
-  // @Timeout(0) // Немедленный запуск задачи при старте
+  @Timeout(0) // Немедленный запуск задачи при старте
   async handleExpiredSubscriptionsImmediately(): Promise<void> {
     console.log('[Scheduler] Task started immediately after app startup');
     await this.handleExpiredSubscriptions();
