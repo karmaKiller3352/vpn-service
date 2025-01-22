@@ -68,7 +68,7 @@ export class TelegramService {
         await this.bot.telegram.setWebhook(webhookUrl);
         console.log(`✅ Вебхук установлен в development mode: ${webhookUrl}`);
       } else {
-        const webhookUrl = `${this.apiURL}/tg-webhook`;
+        const webhookUrl = `${this.apiURL}/api/tg-webhook`;
         await this.bot.telegram.setWebhook(webhookUrl);
         console.log(`✅ Вебхук установлен в production  mode: ${webhookUrl}`);
       }
@@ -81,6 +81,7 @@ export class TelegramService {
 
   private async initializeBot() {
     this.bot.start((ctx) => {
+      console.log("Старт", ctx)
       const response =
         `*Добро пожаловать в VPN-сервис!*\n\n` +
         `Всё просто — следуйте этим шагам, чтобы подключиться:\n` +
@@ -235,6 +236,7 @@ export class TelegramService {
   }
 
   private async handleRequestConfig(ctx) {
+    console.log("Запросить конфиг", ctx)
     try {
       const { qrCode, configFilePath, expirationDate } =
         await this.mainService.requestTgUserConfig({
@@ -276,6 +278,7 @@ export class TelegramService {
   }
 
   private async handleExtendSubscription(ctx) {
+    console.log("Продлить подписку", ctx)
     try {
       await ctx.sendInvoice({
         title: 'Подписка на VPN',
