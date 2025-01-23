@@ -14,8 +14,7 @@ const getConfigurationMessage = (formattedDate: string) =>
   `🔑 **Подписка активна до:** ${formattedDate} МСК (UTC+3).\n` +
   `1️⃣ Откройте приложение Wireguard и выберите «Добавить туннель».\n` +
   `2️⃣ **Сканируйте QR-код** в приложении WireGuard для автоматической настройки.\n` +
-  `3️⃣ **Сканируйте QR-код** в приложении WireGuard для автоматической настройки.\n` +
-  `4️⃣ **Или воспользуйтесь [видеоинструкцией](https://youtube.com/shorts/QOjS6nbfVvk)** для ручного импорта \n\n` +
+  `3️⃣ **Или воспользуйтесь [видеоинструкцией](https://youtube.com/shorts/QOjS6nbfVvk)** для ручного импорта \n\n` +
   `⚠️ **Важно**: После истечения срока подписки ваша конфигурация перестанет работать. Для продления нажмите кнопку "Продлить подписку". `;
 
 const getFormattedDate = (expirationDate: string) =>
@@ -80,10 +79,9 @@ export class TelegramService {
   }
 
   private async initializeBot() {
-    this.bot.start((ctx) => {
+    this.bot.start(async (ctx) => {
       console.log('Старт', ctx);
       const response =
-        `*Добро пожаловать в VPN-сервис!*\n\n` +
         `Всё просто — следуйте этим шагам, чтобы подключиться:\n` +
         `1) **Установите WireGuard-клиент**:
   - 📱 [iOS](https://apps.apple.com/app/wireguard/id1441195209)
@@ -93,36 +91,44 @@ export class TelegramService {
         `2) После установки нажмите кнопку \n*«Сгенерировать конфигурацию»*\n и получите дальнейшие инструкции\n\n` +
         `⚠️ *Важно*: Используйте только конфигурацию, которую вы получите через этого бота.`;
 
+      await ctx.sendChatAction('typing'); // Отправить действие "печатает"
+      await ctx.reply(
+        '*Добро пожаловать в VPN-сервис!*',
+        this.createKeyboardMenu(),
+      );
+
       ctx.reply(response, {
         parse_mode: 'Markdown',
         link_preview_options: { is_disabled: true },
         ...Markup.inlineKeyboard([
           Markup.button.callback(
-            '1️⃣ 🔧 Сгенерировать конфигурацию',
+            '🔧 Сгенерировать конфигурацию',
             'generate_config',
           ),
         ]),
       });
     });
+
     this.bot.action('generate_config', (ctx) => this.handleGenerateConfig(ctx));
+
+    this.bot.telegram.setMyCommands([
+      { command: 'request_config', description: '📄 Запросить конфиг' },
+      { command: 'renew_subscription', description: '🔄 Продлить подписку' },
+    ]);
+
+    // 2 слушателя на запрос конфига
     this.bot.hears('📄 Запросить конфиг', (ctx) =>
       this.handleRequestConfig(ctx),
     );
-    this.bot.hears('🔄 Продлить подписку', async (ctx) => {
-      try {
-        // Отправляем сообщение с выбором способа оплаты
-        await ctx.reply(`*Продлить на 1 месяц:*\n`, {
-          ...Markup.inlineKeyboard([
-            [Markup.button.callback('Заплатить картой - 100 ₽', 'pay_by_card')],
-            [Markup.button.callback('Telegram Stars - 1 ⭐', 'pay_by_stars')],
-          ]),
-          parse_mode: 'Markdown',
-        });
-      } catch (error) {
-        console.error('Ошибка при отправке опций продления подписки:', error);
-        ctx.reply('❌ Произошла ошибка. Попробуйте позже.');
-      }
-    });
+    this.bot.command('request_config', (ctx) => this.handleRequestConfig(ctx));
+
+    // 2 слушателя на продление подписки
+    this.bot.command('renew_subscription', (ctx) =>
+      this.renewSubscription(ctx),
+    );
+    this.bot.hears('🔄 Продлить подписку', (ctx) =>
+      this.renewSubscription(ctx),
+    );
 
     this.bot.action('pay_by_card', (ctx) => this.payWithYoMoney(ctx));
 
@@ -183,10 +189,38 @@ export class TelegramService {
     });
   }
 
+  private async renewSubscription(ctx) {
+    try {
+      // Отправляем сообщение с выбором способа оплаты
+      await ctx.reply(`*Продлить на 1 месяц:*\n`, {
+        ...Markup.inlineKeyboard([
+          [Markup.button.callback('Заплатить картой - 100 ₽', 'pay_by_card')],
+          [Markup.button.callback('Telegram Stars - 1 ⭐', 'pay_by_stars')],
+        ]),
+        parse_mode: 'Markdown',
+      });
+    } catch (error) {
+      console.error('Ошибка при отправке опций продления подписки:', error);
+      ctx.reply('❌ Произошла ошибка. Попробуйте позже.');
+    }
+  }
+
   private async handlePreCheckout(
     ctx: NarrowedContext<Context<any>, Update.PreCheckoutQueryUpdate>,
   ) {
     await ctx.answerPreCheckoutQuery(true);
+  }
+
+  private createKeyboardMenu(): any {
+    return {
+      ...Markup.keyboard([
+        ['🔄 Продлить подписку', '📄 Запросить конфиг'], // Две кнопки в одном ряду
+      ])
+        .resize() // Подгоняет клавиатуру под экран пользователя
+        .oneTime(false),
+      disable_web_page_preview: false,
+      parse_mode: 'Markdown',
+    };
   }
 
   private async handleGenerateConfig(ctx) {
@@ -216,15 +250,7 @@ export class TelegramService {
 
       await ctx.reply(
         getConfigurationMessage(getFormattedDate(expirationDate)),
-        {
-          ...Markup.keyboard([
-            ['🔄 Продлить подписку', '📄 Запросить конфиг'], // Две кнопки в одном ряду
-          ])
-            .resize() // Подгоняет клавиатуру под экран пользователя
-            .oneTime(false),
-          disable_web_page_preview: false,
-          parse_mode: 'Markdown',
-        },
+        this.createKeyboardMenu(),
       );
     } catch (error) {
       console.error(
@@ -235,15 +261,7 @@ export class TelegramService {
       if (error.response?.statusCode === 409) {
         await ctx.reply(
           '❌ Для этого пользователя конфиг уже был создан ранее воспользуйтесь кнопкой \n«Запросить конфиг» в меню чтоб получить его снова.',
-          {
-            ...Markup.keyboard([
-              ['🔄 Продлить подписку', '📄 Запросить конфиг'], // Две кнопки в одном ряду
-            ])
-              .resize() // Подгоняет клавиатуру под экран пользователя
-              .oneTime(false),
-            disable_web_page_preview: true,
-            parse_mode: 'Markdown',
-          },
+          this.createKeyboardMenu(),
         );
       }
 
@@ -252,7 +270,7 @@ export class TelegramService {
   }
 
   private async handleRequestConfig(ctx) {
-    console.log('Запросить конфиг', ctx);
+    console.log('request', ctx);
     try {
       const { qrCode, configFilePath, expirationDate } =
         await this.mainService.requestTgUserConfig({
