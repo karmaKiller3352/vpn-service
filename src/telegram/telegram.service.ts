@@ -81,7 +81,7 @@ export class TelegramService {
 
   private async initializeBot() {
     this.bot.start((ctx) => {
-      console.log("Старт", ctx)
+      console.log('Старт', ctx);
       const response =
         `*Добро пожаловать в VPN-сервис!*\n\n` +
         `Всё просто — следуйте этим шагам, чтобы подключиться:\n` +
@@ -108,9 +108,25 @@ export class TelegramService {
     this.bot.hears('📄 Запросить конфиг', (ctx) =>
       this.handleRequestConfig(ctx),
     );
-    this.bot.hears('🔄 Продлить подписку', (ctx) =>
-      this.handleExtendSubscription(ctx),
-    );
+    this.bot.hears('🔄 Продлить подписку', async (ctx) => {
+      try {
+        // Отправляем сообщение с выбором способа оплаты
+        await ctx.reply(`*Продлить на 1 месяц:*\n`, {
+          ...Markup.inlineKeyboard([
+            [Markup.button.callback('Заплатить картой - 100 ₽', 'pay_by_card')],
+            [Markup.button.callback('Telegram Stars - 1 ⭐', 'pay_by_stars')],
+          ]),
+          parse_mode: 'Markdown',
+        });
+      } catch (error) {
+        console.error('Ошибка при отправке опций продления подписки:', error);
+        ctx.reply('❌ Произошла ошибка. Попробуйте позже.');
+      }
+    });
+
+    this.bot.action('pay_by_card', (ctx) => this.payWithYoMoney(ctx));
+
+    this.bot.action('pay_by_stars', (ctx) => this.payWithStars(ctx));
 
     this.bot.on('pre_checkout_query', async (ctx) =>
       this.handlePreCheckout(ctx),
@@ -136,7 +152,7 @@ export class TelegramService {
         });
         endDateGlobal = endDate;
         await this.wgService.unblockAccess(clientAddress);
-  
+
         await this.mainService.createLog({
           userId: id,
           eventType: 'UNBLOCK IP',
@@ -236,7 +252,7 @@ export class TelegramService {
   }
 
   private async handleRequestConfig(ctx) {
-    console.log("Запросить конфиг", ctx)
+    console.log('Запросить конфиг', ctx);
     try {
       const { qrCode, configFilePath, expirationDate } =
         await this.mainService.requestTgUserConfig({
@@ -277,16 +293,32 @@ export class TelegramService {
     }
   }
 
-  private async handleExtendSubscription(ctx) {
-    console.log("Продлить подписку", ctx)
+  private async payWithYoMoney(ctx) {
+    console.log('Заплатить с помощью YMoney', ctx);
     try {
       await ctx.sendInvoice({
-        title: 'Подписка на VPN',
+        title: 'Оплата картой',
         description: 'Доступ к VPN на 1 месяц.',
-        payload: 'vpn_subscription_1_month',
+        payload: 'vpn_subscription_1_month_ymoney',
         provider_token: this.configService.get<string>('YMONEY_PROVIDER_TOKEN'),
         currency: 'RUB',
         prices: [{ label: '1 месяц подписки', amount: 10000 }],
+        start_parameter: 'get_access',
+      });
+    } catch (error) {
+      console.error('Ошибка при отправке инвойса:', error);
+      ctx.reply('❌ Не удалось создать инвойс. Попробуйте позже.');
+    }
+  }
+
+  private async payWithStars(ctx) {
+    try {
+      await ctx.sendInvoice({
+        title: 'Telegram Stars Payment',
+        description: 'Доступ к VPN на 1 месяц.',
+        payload: 'vpn_subscription_1_month_stars',
+        currency: 'XTR',
+        prices: [{ label: '1 месяц подписки', amount: 1 }],
         start_parameter: 'get_access',
       });
     } catch (error) {
