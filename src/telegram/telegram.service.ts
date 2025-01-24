@@ -9,6 +9,8 @@ import { Update } from 'telegraf/typings/core/types/typegram';
 import { MainService } from 'src/main/main.service';
 import { WireGuardService } from 'src/wireguard/wireguard.service';
 
+const adminUsers = [675781955];
+
 const getConfigurationMessage = (formattedDate: string) =>
   `*Ваша конфигурация готова!*\n\n` +
   `🔑 **Подписка активна до:** ${formattedDate} МСК (UTC+3).\n` +
@@ -27,6 +29,11 @@ const getFormattedDate = (expirationDate: string) =>
     minute: '2-digit',
   });
 
+const defaultTGMenu = [
+  { command: 'request_config', description: '📄 Запросить конфиг' },
+  { command: 'renew_subscription', description: '🔄 Продлить подписку' },
+  { command: 'support', description: 'Обратиться в техподдержку' },
+];
 @Injectable()
 export class TelegramService {
   public bot: Telegraf;
@@ -111,10 +118,13 @@ export class TelegramService {
 
     this.bot.action('generate_config', (ctx) => this.handleGenerateConfig(ctx));
 
-    this.bot.telegram.setMyCommands([
-      { command: 'request_config', description: '📄 Запросить конфиг' },
-      { command: 'renew_subscription', description: '🔄 Продлить подписку' },
-    ]);
+    this.bot.telegram.setMyCommands(defaultTGMenu);
+
+    this.bot.command('support', (ctx) => {
+      ctx.reply(
+        'Если у вас проблемы с подключением или оплатой напиши в техподдержку @vpnForPeopleSupport',
+      );
+    });
 
     // 2 слушателя на запрос конфига
     this.bot.hears('📄 Запросить конфиг', (ctx) =>
@@ -129,6 +139,7 @@ export class TelegramService {
     this.bot.hears('🔄 Продлить подписку', (ctx) =>
       this.renewSubscription(ctx),
     );
+    this.bot.action('renew_subscription', (ctx) => this.renewSubscription(ctx));
 
     this.bot.action('pay_by_card', (ctx) => this.payWithYoMoney(ctx));
 
@@ -186,6 +197,72 @@ export class TelegramService {
           },
         );
       }
+    });
+
+    // admin commands
+    this.bot.hears('Отправить предупреждение', async () => {
+      await this.sendSubscriptionReminder(675781955, new Date());
+    });
+
+    this.bot.action('send_notification', async () => {
+      await this.sendSubscriptionReminder(675781955, new Date());
+    });
+
+    this.bot.action('generate_hidden_user', async (ctx) => {
+      try {
+        const uniqId = Date.now();
+        const { qrCode, configFilePath } =
+          await this.mainService.addHiddenUser(uniqId);
+
+        // Извлекаем только данные изображения (после "base64,")
+        const base64Data = qrCode.split(',')[1];
+
+        // Преобразуем Base64 строку в Buffer
+        const imageBuffer = Buffer.from(base64Data, 'base64');
+
+        // Создание временного файла конфигурации
+        const tempFilePath = path.join(__dirname, 'temp_config.conf');
+
+        fs.writeFileSync(tempFilePath, configFilePath);
+
+        await ctx.replyWithPhoto({ source: imageBuffer });
+        await ctx.replyWithDocument({
+          source: tempFilePath,
+          filename: `hidden-user-${uniqId}.conf`,
+        });
+
+        await ctx.reply(`Ваш конфиг для друга готов`);
+      } catch (error) {
+        console.error(
+          'Ошибка при генерации конфигурации:',
+          error.response?.message,
+        );
+        ctx.answerCbQuery();
+      }
+    });
+
+    this.bot.command('admin', async (ctx) => {
+      const tgId = ctx.message.from.id;
+
+      if (!adminUsers.includes(tgId)) {
+        await ctx.reply(`Вам недоступен админских команд`);
+
+        return;
+      }
+
+      const sentMessage = await ctx.reply(`Список админских команд`, {
+        parse_mode: 'Markdown',
+        link_preview_options: { is_disabled: true },
+        ...Markup.inlineKeyboard([
+          Markup.button.callback(
+            'Отправить предупреждение',
+            'send_notification',
+          ),
+          Markup.button.callback('Конфиг для друга', 'generate_hidden_user'),
+        ]),
+      });
+
+      await ctx.telegram.pinChatMessage(ctx.chat.id, sentMessage.message_id);
     });
   }
 
@@ -270,7 +347,6 @@ export class TelegramService {
   }
 
   private async handleRequestConfig(ctx) {
-    console.log('request', ctx);
     try {
       const { qrCode, configFilePath, expirationDate } =
         await this.mainService.requestTgUserConfig({
@@ -343,5 +419,22 @@ export class TelegramService {
       console.error('Ошибка при отправке инвойса:', error);
       ctx.reply('❌ Не удалось создать инвойс. Попробуйте позже.');
     }
+  }
+
+  async sendSubscriptionReminder(chatId: number, expirationDate: Date) {
+    const message = `🔔 Внимание! 🔔 \nВаша подписка на VPN истекает меньше чем через сутки ${getFormattedDate(expirationDate.toLocaleString())}\n. 
+Пожалуйста, воспользуйтесь кнопкой ниже, чтобы продлить подписку и сохранить доступ.`;
+    console.log(
+      'Сообщение о истекающей подписке было отправлено пользователю',
+      chatId,
+    );
+
+    await this.bot.telegram.sendMessage(chatId, message, {
+      parse_mode: 'Markdown',
+      link_preview_options: { is_disabled: true },
+      ...Markup.inlineKeyboard([
+        Markup.button.callback('🔄 Продлить подписку', 'renew_subscription'),
+      ]),
+    });
   }
 }

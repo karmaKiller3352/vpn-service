@@ -28,6 +28,16 @@ export class MainService {
     };
   }
 
+  async addHiddenUser(id: number) {
+    const { qrCode, configFilePath } = await this.wgService.addPeer(id);
+
+    return {
+      qrCode,
+      message: '',
+      configFilePath,
+    };
+  }
+
   async addTGUser(user: AddTgUser): Promise<PeerInfo> {
     const { telegramId } = user;
 

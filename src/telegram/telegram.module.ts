@@ -8,6 +8,7 @@ import { TelegramService } from './telegram.service';
 import { TelegramController } from './telegram.controller';
 
 @Module({
+  exports: [TelegramService],
   providers: [TelegramService],
   controllers: [TelegramController],
   imports: [WireguardModule, ConfigModule, MainModule],

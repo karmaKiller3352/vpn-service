@@ -1,6 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LessThan, Repository } from 'typeorm';
+import {
+  And,
+  LessThan,
+  LessThanOrEqual,
+  MoreThanOrEqual,
+  Repository,
+} from 'typeorm';
 import { Config } from './entities/config.entity';
 import { Log } from './entities/log.entity';
 import { Subscription } from './entities/subscription.entity';
@@ -108,6 +114,21 @@ export class DatabaseService {
     return await this.userRepository.findOne({
       where: { telegramId },
     });
+  }
+
+  async findExpiringSubscriptions() {
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(now.getDate() + 1);
+
+    const expiringSubscriptions = await this.subscriptionRepository.find({
+      where: {
+        endDate: And(MoreThanOrEqual(now), LessThanOrEqual(tomorrow)),
+      },
+      relations: ['user'],
+    });
+
+    return expiringSubscriptions;
   }
 
   async checkIfSubscriptionForUserExists(userId: number) {
