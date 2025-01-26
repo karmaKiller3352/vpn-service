@@ -16,7 +16,7 @@ const getConfigurationMessage = (formattedDate: string) =>
   `🔑 **Подписка активна до:** ${formattedDate} МСК (UTC+3).\n` +
   `1️⃣ Откройте приложение Wireguard и выберите «Добавить туннель».\n` +
   `2️⃣ **Сканируйте QR-код** в приложении WireGuard для автоматической настройки.\n` +
-  `3️⃣ **Или воспользуйтесь [видеоинструкцией](https://youtube.com/shorts/QOjS6nbfVvk)** для ручного импорта \n\n` +
+  `3️⃣ **Или воспользуйтесь [видеоинструкцией](https://rutube.ru/video/7260a31da6735c0205d526c317f9b9d7/)** для ручного импорта \n\n` +
   `⚠️ **Важно**: После истечения срока подписки ваша конфигурация перестанет работать. Для продления нажмите кнопку "Продлить подписку". `;
 
 const getFormattedDate = (expirationDate: string) =>
@@ -272,7 +272,7 @@ export class TelegramService {
       await ctx.reply(`*Продлить на 1 месяц:*\n`, {
         ...Markup.inlineKeyboard([
           [Markup.button.callback('Заплатить картой - 100 ₽', 'pay_by_card')],
-          [Markup.button.callback('Telegram Stars - 1 ⭐', 'pay_by_stars')],
+          [Markup.button.callback('Telegram Stars - 125 ⭐', 'pay_by_stars')],
         ]),
         parse_mode: 'Markdown',
       });
@@ -391,7 +391,7 @@ export class TelegramService {
     console.log('Заплатить с помощью YMoney', ctx);
     try {
       await ctx.sendInvoice({
-        title: 'Оплата картой',
+        title: 'Оплата картой или YMoney',
         description: 'Доступ к VPN на 1 месяц.',
         payload: 'vpn_subscription_1_month_ymoney',
         provider_token: this.configService.get<string>('YMONEY_PROVIDER_TOKEN'),
@@ -412,7 +412,7 @@ export class TelegramService {
         description: 'Доступ к VPN на 1 месяц.',
         payload: 'vpn_subscription_1_month_stars',
         currency: 'XTR',
-        prices: [{ label: '1 месяц подписки', amount: 1 }],
+        prices: [{ label: '1 месяц подписки', amount: 125 }],
         start_parameter: 'get_access',
       });
     } catch (error) {
