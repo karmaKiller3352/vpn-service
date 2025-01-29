@@ -285,6 +285,7 @@ export class TelegramService {
   private async handlePreCheckout(
     ctx: NarrowedContext<Context<any>, Update.PreCheckoutQueryUpdate>,
   ) {
+    console.log(ctx)
     await ctx.answerPreCheckoutQuery(true);
   }
 
