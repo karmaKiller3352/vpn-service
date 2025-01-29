@@ -58,8 +58,8 @@ export class TelegramService {
   }
 
   private async setupWebhook() {
-    try {
-      if (this.isDev) {
+    if (this.isDev) {
+      try {
         // Запуск ngrok и получение публичного URL
         const ngrokUrl = await ngrok.connect({
           addr: '8443', // Порт, на котором работает NestJS
@@ -73,13 +73,17 @@ export class TelegramService {
         const webhookUrl = `${ngrokUrl}/api/tg-webhook`;
         await this.bot.telegram.setWebhook(webhookUrl);
         console.log(`✅ Вебхук установлен в development mode: ${webhookUrl}`);
-      } else {
+      } catch (error) {
+        console.error('❌ Ошибка установки вебхука через NGROK:', error);
+      }
+    } else {
+      try {
         const webhookUrl = `${this.apiURL}/api/tg-webhook`;
         await this.bot.telegram.setWebhook(webhookUrl);
         console.log(`✅ Вебхук установлен в production  mode: ${webhookUrl}`);
+      } catch (error) {
+        console.error('❌ Ошибка установки вебхука в продакшене:', error);
       }
-    } catch (err) {
-      console.error('❌ Ошибка установки вебхука через NGROK:', err);
     }
 
     await this.initializeBot();
@@ -285,7 +289,7 @@ export class TelegramService {
   private async handlePreCheckout(
     ctx: NarrowedContext<Context<any>, Update.PreCheckoutQueryUpdate>,
   ) {
-    console.log(ctx)
+    console.log(ctx);
     await ctx.answerPreCheckoutQuery(true);
   }
 
