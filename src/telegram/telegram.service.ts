@@ -7,7 +7,9 @@ import { Telegraf, NarrowedContext, Context, Markup } from 'telegraf';
 import { Update } from 'telegraf/typings/core/types/typegram';
 
 import { MainService } from 'src/main/main.service';
+
 import { WireGuardService } from 'src/wireguard/wireguard.service';
+import { ConfigServiceType } from 'src/main/main.types';
 
 const adminUsers = [675781955];
 
@@ -114,13 +116,15 @@ export class TelegramService {
         ...Markup.inlineKeyboard([
           Markup.button.callback(
             '🔧 Сгенерировать конфигурацию',
-            'generate_config',
+            'generate_wireguard_config',
           ),
         ]),
       });
     });
 
-    this.bot.action('generate_config', (ctx) => this.handleGenerateConfig(ctx));
+    this.bot.action('generate_wireguard_config', (ctx) =>
+      this.handleGenerateConfig(ctx, 'wireguard'),
+    );
 
     this.bot.telegram.setMyCommands(defaultTGMenu);
 
@@ -131,10 +135,13 @@ export class TelegramService {
     });
 
     // 2 слушателя на запрос конфига
+    // тут запрашиваем конфиг для вайргварда
     this.bot.hears('📄 Запросить конфиг', (ctx) =>
-      this.handleRequestConfig(ctx),
+      this.handleRequestConfig(ctx, 'wireguard'),
     );
-    this.bot.command('request_config', (ctx) => this.handleRequestConfig(ctx));
+    this.bot.command('request_config', (ctx) =>
+      this.handleRequestConfig(ctx, 'wireguard'),
+    );
 
     // 2 слушателя на продление подписки
     this.bot.command('renew_subscription', (ctx) =>
@@ -305,12 +312,18 @@ export class TelegramService {
     };
   }
 
-  private async handleGenerateConfig(ctx) {
+  private async handleGenerateConfig(
+    ctx,
+    configServiceType: ConfigServiceType,
+  ) {
     try {
       const userId = ctx.from.id;
 
       const { qrCode, configFilePath, expirationDate } =
-        await this.mainService.addTGUser({ telegramId: userId });
+        await this.mainService.addTGUser({
+          telegramId: userId,
+          configServiceType,
+        });
 
       // Извлекаем только данные изображения (после "base64,")
       const base64Data = qrCode.split(',')[1];
@@ -351,10 +364,11 @@ export class TelegramService {
     }
   }
 
-  private async handleRequestConfig(ctx) {
+  private async handleRequestConfig(ctx, configServiceType: ConfigServiceType) {
     try {
       const { qrCode, configFilePath, expirationDate } =
         await this.mainService.requestTgUserConfig({
+          configServiceType,
           telegramId: ctx.from.id,
         });
 

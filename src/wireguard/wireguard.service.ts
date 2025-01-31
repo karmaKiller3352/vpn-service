@@ -3,7 +3,6 @@ import * as QRCode from 'qrcode';
 import { exec } from 'child_process';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { promises as fs } from 'fs';
 
 @Injectable()
 export class WireGuardService {
@@ -241,10 +240,11 @@ export class WireGuardService {
   }
 
   async getNextAvailableAddress(): Promise<string> {
-    const networkPrefix = '10.0.0'; // Базовая сеть VPN
-    const subnet = '/32'; // Для индивидуального IP
-    const start = 2; // Начинаем с 10.0.0.2
-    const end = 254; // Заканчиваем на 10.0.0.254
+    const subnet = '/32'; // Индивидуальный IP
+    const startOctet3 = 8; // 172.30.8.X
+    const endOctet3 = 11; // 172.30.11.X
+    const start = 1; // Начинаем с 172.30.8.1
+    const end = 254; // До 172.30.X.254
 
     // Получаем список уже занятых адресов
     const result = await this.executeCommand(
@@ -255,17 +255,28 @@ export class WireGuardService {
       .split('\n')
       .map((line) => line.split('\t')[1]) // Извлекаем IP-адрес
       .filter(Boolean)
-      .map((ip) => ip.split('/')[0]); // Убираем маску подсети
+      .map((ip) => ip.split('/')[0]) // Убираем маску подсети
+      .filter(
+        (ip) =>
+          ip.startsWith('172.30.8.') ||
+          ip.startsWith('172.30.9.') ||
+          ip.startsWith('172.30.10.') ||
+          ip.startsWith('172.30.11.'),
+      ); // Проверяем только наш диапазон
 
-    // Ищем первый свободный адрес
-    for (let i = start; i <= end; i++) {
-      const candidate = `${networkPrefix}.${i}`;
-      if (!usedAddresses.includes(candidate)) {
-        return `${candidate}${subnet}`;
+    // Перебираем IP в нужном диапазоне
+    for (let octet3 = startOctet3; octet3 <= endOctet3; octet3++) {
+      for (let octet4 = start; octet4 <= end; octet4++) {
+        const candidate = `172.30.${octet3}.${octet4}`;
+        if (!usedAddresses.includes(candidate)) {
+          return `${candidate}${subnet}`;
+        }
       }
     }
 
-    throw new Error('No available IP addresses');
+    throw new Error(
+      'No available IP addresses in the range 172.30.8.1 - 172.30.11.254',
+    );
   }
 
   async removePeer(publicKey: string): Promise<void> {

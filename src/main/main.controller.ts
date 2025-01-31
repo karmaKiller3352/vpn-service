@@ -12,7 +12,6 @@ import { MainService } from './main.service';
 import { WireGuardService } from 'src/wireguard/wireguard.service';
 import { Telegraf } from 'telegraf';
 
-
 @Controller()
 export class MainController {
   constructor(

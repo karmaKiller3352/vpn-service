@@ -1,5 +1,6 @@
 export type AddTgUser = {
   telegramId: number;
+  configServiceType: ConfigServiceType;
 };
 
 export type PeerInfo = {
@@ -9,3 +10,5 @@ export type PeerInfo = {
   configFilePath: string;
   expirationDate: string;
 };
+
+export type ConfigServiceType = 'wireguard' | 'openvpn';

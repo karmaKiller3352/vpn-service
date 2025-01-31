@@ -1,7 +1,9 @@
-import { DatabaseService } from './../database/database.service';
-import { WireGuardService } from './../wireguard/wireguard.service';
-import { AddTgUser, PeerInfo } from './main.types';
 import { ConflictException, Injectable } from '@nestjs/common';
+
+import { DatabaseService } from 'src/database/database.service';
+import { WireGuardService } from 'src/wireguard/wireguard.service';
+
+import { AddTgUser, PeerInfo, ConfigServiceType } from './main.types';
 
 @Injectable()
 export class MainService {
@@ -59,8 +61,11 @@ export class MainService {
       );
     }
 
+    // TO DO: Extend for using other vpn services
     const { qrCode, configFilePath, clientAddress, publicKey } =
-      await this.wgService.addPeer(id);
+      user.configServiceType === 'wireguard'
+        ? await this.wgService.addPeer(id)
+        : { qrCode: '', configFilePath: '', clientAddress: '', publicKey: '' };
 
     await this.dbService.createNewConfig({
       userId: id,
