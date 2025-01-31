@@ -122,9 +122,9 @@ export class TelegramService {
       });
     });
 
-    this.bot.action('generate_wireguard_config', (ctx) =>
-      this.handleGenerateConfig(ctx, 'wireguard'),
-    );
+    this.bot.action('generate_wireguard_config', (ctx) => {
+      this.handleGenerateConfig(ctx, 'wireguard');
+    });
 
     this.bot.telegram.setMyCommands(defaultTGMenu);
 
@@ -316,6 +316,7 @@ export class TelegramService {
     ctx,
     configServiceType: ConfigServiceType,
   ) {
+    console.log('Запрашиваем конфиг', ctx, configServiceType);
     try {
       const userId = ctx.from.id;
 
@@ -365,6 +366,7 @@ export class TelegramService {
   }
 
   private async handleRequestConfig(ctx, configServiceType: ConfigServiceType) {
+    console.log('Запрашиваем конфиг', ctx, configServiceType);
     try {
       const { qrCode, configFilePath, expirationDate } =
         await this.mainService.requestTgUserConfig({

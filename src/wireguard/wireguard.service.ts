@@ -243,7 +243,7 @@ export class WireGuardService {
     const subnet = '/32'; // Индивидуальный IP
     const startOctet3 = 8; // 172.30.8.X
     const endOctet3 = 11; // 172.30.11.X
-    const start = 1; // Начинаем с 172.30.8.1
+    const start = 2; // Теперь начинаем с 172.30.8.2 (не 172.30.8.1)
     const end = 254; // До 172.30.X.254
 
     // Получаем список уже занятых адресов
@@ -262,7 +262,7 @@ export class WireGuardService {
           ip.startsWith('172.30.9.') ||
           ip.startsWith('172.30.10.') ||
           ip.startsWith('172.30.11.'),
-      ); // Проверяем только наш диапазон
+      ); // Проверяем только нужный диапазон
 
     // Перебираем IP в нужном диапазоне
     for (let octet3 = startOctet3; octet3 <= endOctet3; octet3++) {
@@ -275,7 +275,7 @@ export class WireGuardService {
     }
 
     throw new Error(
-      'No available IP addresses in the range 172.30.8.1 - 172.30.11.254',
+      'No available IP addresses in the range 172.30.8.2 - 172.30.11.254',
     );
   }
 
