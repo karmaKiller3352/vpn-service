@@ -31,5 +31,12 @@ jobs:
 
             # Переходим в папку с docker-compose.yml
             cd /root
-            # Перезапускаем контейнеры
-            docker-compose up --build -d backend
+
+            # 1️⃣ Явно создаём сеть WireGuard, если она отсутствует
+            docker network create wireguard_net || true
+
+            # 2️⃣ Останавливаем старые контейнеры (не удаляя сеть!)
+            docker-compose down --remove-orphans
+
+            # 3️⃣ Запускаем backend и все зависимости (включая WireGuard)
+            docker-compose up --build -d
